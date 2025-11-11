@@ -1,0 +1,79 @@
+main.cpp
+
+#include <iostream>
+#include <dlfcn.h>
+#include <cstring>
+#include <cmath>
+using namespace std;
+
+int main() {
+    void *handle = dlopen("./libmylib.so", RTLD_LAZY);
+    if (!handle) {
+        cerr << "Error loading library: " << dlerror() << endl;
+        return 1;
+    }
+
+    // Load functions from library
+    auto add = (double (*)(double, double))dlsym(handle, "add");
+    auto sub = (double (*)(double, double))dlsym(handle, "sub");
+    auto mul = (double (*)(double, double))dlsym(handle, "mul");
+    auto divide = (double (*)(double, double))dlsym(handle, "divide");
+    auto sine = (double (*)(double))dlsym(handle, "sine");
+    auto cosine = (double (*)(double))dlsym(handle, "cosine");
+    auto strLength = (int (*)(const char *))dlsym(handle, "strLength");
+    auto strReverse = (void (*)(char *))dlsym(handle, "strReverse");
+
+    int choice;
+    do {
+        cout << "\n========== MENU ==========\n";
+        cout << "1. Arithmetic Operations\n";
+        cout << "2. Trigonometric Operations\n";
+        cout << "3. String Operations\n";
+        cout << "4. Exit\n";
+        cout << "Enter your choice: ";
+        cin >> choice;
+
+        if (choice == 1) {
+            double a, b;
+            cout << "Enter two numbers: ";
+            cin >> a >> b;
+            cout << "\nAddition: " << add(a, b);
+            cout << "\nSubtraction: " << sub(a, b);
+            cout << "\nMultiplication: " << mul(a, b);
+            cout << "\nDivision: " << divide(a, b) << endl;
+        }
+
+        else if (choice == 2) {
+            double angle;
+            cout << "Enter angle (in radians): ";
+            cin >> angle;
+            cout << "\nsin(" << angle << ") = " << sine(angle);
+            cout << "\ncos(" << angle << ") = " << cosine(angle) << endl;
+        }
+
+        else if (choice == 3) {
+            char str[100];
+            cout << "Enter a string: ";
+            cin >> str;
+            cout << "\nString length: " << strLength(str);
+            strReverse(str);
+            cout << "\nReversed string: " << str << endl;
+        }
+
+        else if (choice == 4) {
+            cout << "Exiting...\n";
+        }
+
+        else {
+            cout << "Invalid choice!\n";
+        }
+
+    } while (choice != 4);
+
+    dlclose(handle);
+    return 0;
+}
+
+g++ main.cpp -ldl -o app
+./app
+

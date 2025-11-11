@@ -1,0 +1,28 @@
+filename=mylib.cpp
+
+#include <iostream>
+#include <cstring>
+#include <cmath>
+using namespace std;
+
+// Arithmetic functions
+extern "C" double add(double a, double b) { return a + b; }
+extern "C" double sub(double a, double b) { return a - b; }
+extern "C" double mul(double a, double b) { return a * b; }
+extern "C" double divide(double a, double b) { return (b != 0) ? a / b : 0; }
+
+// Trigonometric functions (radians)
+extern "C" double sine(double x) { return sin(x); }
+extern "C" double cosine(double x) { return cos(x); }
+
+// String functions
+extern "C" int strLength(const char *s) { return strlen(s); }
+
+extern "C" void strReverse(char *s) {
+    int n = strlen(s);
+    for (int i = 0; i < n / 2; i++)
+        swap(s[i], s[n - i - 1]);
+}
+
+g++ -c -fPIC mylib.cpp -o mylib.o
+g++ -shared -o libmylib.so mylib.o
