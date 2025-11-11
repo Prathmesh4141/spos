@@ -1,0 +1,165 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+struct Process {
+    int pid, at, bt, pr, ct, tat, wt, remaining;
+};
+
+// Function to display results
+void display(vector<Process> p) {
+    cout << "\nP\tAT\tBT\tCT\tTAT\tWT\n";
+    double totalWT = 0, totalTAT = 0;
+    for (auto &x : p) {
+        cout << "P" << x.pid << "\t" << x.at << "\t" << x.bt << "\t"
+             << x.ct << "\t" << x.tat << "\t" << x.wt << endl;
+        totalWT += x.wt;
+        totalTAT += x.tat;
+    }
+    cout << fixed << setprecision(2);
+    cout << "\nAverage Waiting Time: " << totalWT / p.size();
+    cout << "\nAverage Turnaround Time: " << totalTAT / p.size() << endl;
+}
+
+// ---------- FCFS ----------
+void fcfs(vector<Process> p) {
+    sort(p.begin(), p.end(), [](auto &a, auto &b) { return a.at < b.at; });
+    int time = 0;
+    for (auto &x : p) {
+        if (time < x.at) time = x.at;
+        time += x.bt;
+        x.ct = time;
+        x.tat = x.ct - x.at;
+        x.wt = x.tat - x.bt;
+    }
+    cout << "\n--- FCFS Scheduling ---\n";
+    display(p);
+}
+
+// ---------- SJF (Preemptive) ----------
+void sjfPreemptive(vector<Process> p) {
+    cout << "\n--- SJF (Preemptive) Scheduling ---\n";
+    int n = p.size(), complete = 0, t = 0, minm = INT_MAX, shortest = -1;
+    bool check = false;
+    for (auto &x : p) x.remaining = x.bt;
+
+    while (complete != n) {
+        for (int j = 0; j < n; j++) {
+            if (p[j].at <= t && p[j].remaining > 0 && p[j].remaining < minm) {
+                minm = p[j].remaining;
+                shortest = j;
+                check = true;
+            }
+        }
+
+        if (!check) { t++; continue; }
+        p[shortest].remaining--;
+        minm = (p[shortest].remaining == 0) ? INT_MAX : p[shortest].remaining;
+
+        if (p[shortest].remaining == 0) {
+            complete++;
+            check = false;
+            p[shortest].ct = t + 1;
+            p[shortest].tat = p[shortest].ct - p[shortest].at;
+            p[shortest].wt = p[shortest].tat - p[shortest].bt;
+            if (p[shortest].wt < 0) p[shortest].wt = 0;
+        }
+        t++;
+    }
+    display(p);
+}
+
+// ---------- Priority (Non-Preemptive) ----------
+void priorityScheduling(vector<Process> p) {
+    cout << "\nEnter priority for each process:\n";
+    for (auto &x : p) {
+        cout << "P" << x.pid << ": ";
+        cin >> x.pr;
+    }
+    sort(p.begin(), p.end(), [](auto &a, auto &b) {
+        if (a.at == b.at) return a.pr < b.pr;
+        return a.at < b.at;
+    });
+
+    int time = 0;
+    for (auto &x : p) {
+        if (time < x.at) time = x.at;
+        time += x.bt;
+        x.ct = time;
+        x.tat = x.ct - x.at;
+        x.wt = x.tat - x.bt;
+    }
+    cout << "\n--- Priority (Non-Preemptive) Scheduling ---\n";
+    display(p);
+}
+
+// ---------- Round Robin (Preemptive) ----------
+void roundRobin(vector<Process> p) {
+    int q;
+    cout << "Enter Time Quantum: ";
+    cin >> q;
+    cout << "\n--- Round Robin Scheduling ---\n";
+    int n = p.size(), t = 0, done = 0;
+    for (auto &x : p) x.remaining = x.bt;
+    queue<int> qid;
+    vector<bool> inQueue(n, false);
+
+    while (done < n) {
+        for (int i = 0; i < n; i++)
+            if (p[i].at <= t && !inQueue[i] && p[i].remaining > 0) {
+                qid.push(i);
+                inQueue[i] = true;
+            }
+
+        if (qid.empty()) { t++; continue; }
+
+        int i = qid.front(); qid.pop();
+        int exec = min(q, p[i].remaining);
+        p[i].remaining -= exec;
+        t += exec;
+
+        for (int j = 0; j < n; j++)
+            if (p[j].at <= t && !inQueue[j] && p[j].remaining > 0) {
+                qid.push(j);
+                inQueue[j] = true;
+            }
+
+        if (p[i].remaining == 0) {
+            done++;
+            p[i].ct = t;
+            p[i].tat = p[i].ct - p[i].at;
+            p[i].wt = p[i].tat - p[i].bt;
+        } else qid.push(i);
+    }
+    display(p);
+}
+
+// ---------- Main Menu ----------
+int main() {
+    int n;
+    cout << "Enter number of processes: ";
+    cin >> n;
+    vector<Process> p(n);
+    cout << "Enter Arrival Time and Burst Time:\n";
+    for (int i = 0; i < n; i++) {
+        p[i].pid = i + 1;
+        cin >> p[i].at >> p[i].bt;
+    }
+
+    int ch;
+    do {
+        cout << "\n========== CPU Scheduling Algorithms ==========\n";
+        cout << "1. FCFS\n2. SJF (Preemptive)\n3. Priority (Non-Preemptive)\n4. Round Robin (Preemptive)\n5. Exit\n";
+        cout << "Enter choice: ";
+        cin >> ch;
+
+        switch (ch) {
+            case 1: fcfs(p); break;
+            case 2: sjfPreemptive(p); break;
+            case 3: priorityScheduling(p); break;
+            case 4: roundRobin(p); break;
+            case 5: cout << "Exiting...\n"; break;
+            default: cout << "Invalid choice!\n";
+        }
+    } while (ch != 5);
+    return 0;
+}
