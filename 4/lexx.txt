@@ -1,0 +1,20 @@
+filename=infix.l
+
+%{
+#include "y.tab.h"
+%}
+
+%%
+[a-zA-Z]        { return ID; }          // variable or identifier
+[+]             { return PLUS; }
+[-]             { return MINUS; }
+[*]             { return MUL; }
+[/]             { return DIV; }
+[=]             { return ASSIGN; }
+[(]             { return LP; }
+[)]             { return RP; }
+[ \t\n]         ;                       // ignore spaces/newlines
+.               { return INVALID; }     // invalid characters
+%%
+
+int yywrap() { return 1; }

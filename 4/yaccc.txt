@@ -1,0 +1,53 @@
+file name=infix.y
+%{
+#include <stdio.h>
+#include <stdlib.h>
+int yylex();
+void yyerror(const char *s);
+%}
+
+%token ID PLUS MINUS MUL DIV ASSIGN LP RP INVALID
+
+%%
+stmt : ID ASSIGN expr        { printf("Valid infix expression\n"); }
+     | expr                  { printf("Valid infix expression\n"); }
+     ;
+
+expr : expr PLUS term
+     | expr MINUS term
+     | term
+     ;
+
+term : term MUL factor
+     | term DIV factor
+     | factor
+     ;
+
+factor : LP expr RP
+       | ID
+       ;
+%%
+
+void yyerror(const char *s) {
+    printf("Invalid expression\n");
+}
+
+int main() {
+    printf("Enter an expression: ");
+    yyparse();
+    return 0;
+}
+
+
+how to run---
+# Step 1: Generate lex.yy.c from LEX file
+lex infix.l
+
+# Step 2: Generate y.tab.c and y.tab.h from YACC file
+yacc -d infix.y
+
+# Step 3: Compile both generated files together
+g++ lex.yy.c y.tab.c -o infix
+
+# Step 4: Run the program
+./infix
